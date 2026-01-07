@@ -1,6 +1,6 @@
 import dagster as dg
 import pandas as pd
-from retail_store.db import engine
+from retail_store.db import raw_data_engine
 from pathlib import Path
 
 @dg.asset(group_name="Extract")
@@ -19,13 +19,15 @@ def load_retail_transactions(context: dg.AssetExecutionContext, extract_retail_t
     df: pd.DataFrame = extract_retail_transactions
     try:
         context.log.info(f"Attempting to load {len(df)} rows to retail_transactions")
-        df.to_sql("raw_data_retail_transactions", engine, if_exists="append", index=False)
+        df.to_sql("raw_data_retail_transactions", raw_data_engine, if_exists="append", index=False)
     except:
         raise dg.Failure(f"Failed to load retail transactions")
-    raw_data_retail_transactions = pd.read_sql("SELECT * FROM raw_data_retail_transactions", engine)
-    return df
+    raw_data_retail_transactions = pd.read_sql("SELECT * FROM raw_data_retail_transactions", raw_data_engine)
+    return raw_data_retail_transactions
 
 @dg.asset(group_name="Staging", deps=[load_retail_transactions])
 def stage_retail_transactions(context: dg.AssetExecutionContext, load_retail_transactions: pd.DataFrame):
+    raw_data_retail_transactions = load_retail_transactions
+    
 
 
