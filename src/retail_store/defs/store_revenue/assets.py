@@ -7,22 +7,24 @@ from pathlib import Path
 def extract_retail_transactions(context: dg.AssetExecutionContext):
     data_path = Path("src/retail_store/data/Retail_Transaction_Dataset.csv")
     try:
-        context.log.info("Attempting to extract retail transactions from {data_path}")
+        context.log.info(f"Attempting to extract retail transactions from {data_path}")
         df = pd.read_csv(data_path)
-    except:
-        raise dg.Failure(f"Failed to extract retail transactions")
-    context.log.info(f"Extracted {len(df)} rows from {data_path}")
+        context.log.info(f"Extracted {len(df)} rows from {data_path}")
+    except Exception as e:
+        raise dg.Failure(f"Failed to extract retail transactions: {e}")
     return df
 
 @dg.asset(group_name="Load", deps=[extract_retail_transactions])
 def load_retail_transactions(context: dg.AssetExecutionContext, extract_retail_transactions: pd.DataFrame):
     df: pd.DataFrame = extract_retail_transactions
     try:
-        context.log.info(f"Attempting to load {len(df)} rows to retail_transactions")
-        df.to_sql("retail_transactions", raw_data_engine, if_exists="append", index=False)
-    except:
-        raise dg.Failure(f"Failed to load retail transactions")
-    raw_data_retail_transactions = pd.read_sql("SELECT * FROM retail_transactions", raw_data_engine)
+        # Use table name prefix: raw_data_retail_transactions (simulates raw_data.retail_transactions schema)
+        context.log.info(f"Attempting to load {len(df)} rows to raw_data_retail_transactions")
+        df.to_sql("raw_data_retail_transactions", raw_data_engine, if_exists="append", index=False)
+        context.log.info(f"Loaded {len(df)} rows to raw_data_retail_transactions")
+    except Exception as e:
+        raise dg.Failure(f"Failed to load retail transactions: {e}")
+    raw_data_retail_transactions = pd.read_sql("SELECT * FROM raw_data_retail_transactions", raw_data_engine)
     return raw_data_retail_transactions
 
 @dg.asset(group_name="Staging", deps=[load_retail_transactions])

@@ -1,6 +1,12 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
 
-raw_data_engine = create_engine("sqlite:///src/retail_store/db/raw_data.db", echo=True)
-staging_engine = create_engine("sqlite:///src/retail_store/db/staging.db", echo=True)
-public_engine = create_engine("sqlite:///src/retail_store/db/public.db", echo=True)
+# Single warehouse database (SQLite doesn't support schemas, so we use table name prefixes)
+# raw_data_* tables = raw_data schema
+# staging_* tables = staging schema  
+# dim_* and fact_* tables = public/transform schema
+engine = create_engine("sqlite:///src/retail_store/db/public.db", echo=True)
+
+# For backward compatibility, keep these aliases pointing to the same engine
+raw_data_engine = engine
+staging_engine = engine
+public_engine = engine
